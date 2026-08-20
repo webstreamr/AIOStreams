@@ -5,7 +5,7 @@
  */
 export const HEADER_PRESETS: Record<string, Record<string, string>> = {
   sabnzbd: {
-    'User-Agent': 'SABnzbd/5.0.4',
+    'User-Agent': 'SABnzbd/5.1.1',
   },
   nzbget: {
     Accept: '*/*',
