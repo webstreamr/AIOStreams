@@ -22,6 +22,7 @@ jobs:
       - name: Update header presets
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          PR_BODY_FILE: ${{ runner.temp }}/pr-body.md
         run: node scripts/update-user-agents.mjs
 
       - name: Check for changes
@@ -48,7 +49,7 @@ jobs:
           if ! gh pr list --head chore/update-header-presets --state open --json number --jq '.[0]' | grep -q .; then
             gh pr create \
               --title "chore: update header presets" \
-              --body "Automated update of built-in header preset User-Agent versions." \
+              --body-file "${{ runner.temp }}/pr-body.md" \
               --head chore/update-header-presets \
               --base main
           fi

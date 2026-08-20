@@ -194,6 +194,9 @@ async function main() {
   if (process.env.GITHUB_STEP_SUMMARY) {
     appendFileSync(process.env.GITHUB_STEP_SUMMARY, `\n${summary}\n`);
   }
+  if (process.env.PR_BODY_FILE) {
+    writeFileSync(process.env.PR_BODY_FILE, summary);
+  }
 }
 
 await main();
