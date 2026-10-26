@@ -1,6 +1,7 @@
 import { t } from '@lingui/core/macro';
 import { storage } from '../storage';
 import type { JellyfinClient } from '../client';
+import type { Host } from '../hosts';
 import type { Chapter } from './chapters';
 import type { SubtitleStyle } from '../settings';
 import type { SubtitleLine } from '../subtitles/cues';
@@ -52,6 +53,10 @@ export type PlayerFeature = 'audio' | 'chapters' | 'stats' | 'headers';
 /** Engines that list a file's audio tracks let the page's own video switch them. */
 export const browserFeatures: readonly PlayerFeature[] =
   'audioTracks' in HTMLMediaElement.prototype ? ['audio'] : [];
+
+/** What the player on this device can do: an app's own engine, else the page's video. */
+export const playerFeaturesOf = (host: Host): readonly PlayerFeature[] =>
+  (host.player ? host.playerFeatures : browserFeatures) ?? [];
 
 /** What lining an added subtitle up with the file's own found; `asked` when the user asked for it. */
 export type SyncOutcome = { asked: boolean } & (

@@ -1,7 +1,8 @@
 import React from 'react';
 import { currentHost } from './hosts';
 import { useRefreshWatchState } from './queries';
-import { REMOTE_CAPABILITIES } from './remote/capabilities';
+import { playerFeaturesOf } from './playback/controller';
+import { remoteCapabilities } from './remote/capabilities';
 import { commandOf, sendRemote, type RemoteCommand } from './remote/commands';
 import { useSession } from './session';
 import { useLatest } from './use-latest';
@@ -49,7 +50,10 @@ export function useServerEvents(playing: boolean): void {
         failures = 0;
         // Servers keep what a device can do only while its socket is open.
         void client
-          .post('/Sessions/Capabilities/Full', REMOTE_CAPABILITIES)
+          .post(
+            '/Sessions/Capabilities/Full',
+            remoteCapabilities(playerFeaturesOf(currentHost()))
+          )
           .catch(() => {});
       };
       ws.onmessage = (event) => {

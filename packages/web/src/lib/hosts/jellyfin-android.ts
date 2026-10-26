@@ -8,7 +8,7 @@ import {
   type SegmentAction,
 } from '../settings';
 import type { DownloadsHost } from '../downloads/types';
-import { REMOTE_CAPABILITIES } from '../remote/capabilities';
+import { remoteCapabilities } from '../remote/capabilities';
 import type { BaseItemDto, SourceInfo } from '../types';
 import type { Host } from '.';
 import { mediaInfo } from './native-shell';
@@ -244,7 +244,7 @@ function build(app: AndroidInterface): { page: Host; player: Host } {
     // The app reads the stored sign-in when this is requested.
     signedIn: (client) =>
       void client
-        .post('/Sessions/Capabilities/Full', REMOTE_CAPABILITIES)
+        .post('/Sessions/Capabilities/Full', remoteCapabilities())
         .catch(() => {}),
   };
   return { page, player: { ...page, play } };
