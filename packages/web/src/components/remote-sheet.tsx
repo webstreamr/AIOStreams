@@ -78,6 +78,8 @@ const OPEN_POLL_MS = 5_000;
 const FOLLOW_POLL_MS = 20_000;
 /** A device given a title may take this long to start it. */
 const STARTING_MS = 60_000;
+/** Longer than the ten seconds a device takes to report the tracks it plays. */
+const HELD_MS = 15_000;
 
 const GUTTER = 'ps-4 pe-[max(1rem,env(safe-area-inset-right))]';
 
@@ -226,6 +228,63 @@ function usePosition(session: SessionInfoDto, durationMs: number) {
   return Math.min(reported + moved, durationMs || Infinity);
 }
 
+/** Its own component, so the position's tick each second leaves the pickers alone. */
+function Position({
+  session,
+  durationMs,
+  onSeek,
+}: {
+  session: SessionInfoDto;
+  durationMs: number;
+  onSeek(ms: number): void;
+}) {
+  const position = usePosition(session, durationMs);
+  const [seeking, setSeeking] = React.useState<number | null>(null);
+  const shownMs = seeking ?? position;
+  return (
+    <div className="space-y-1">
+      <Slider
+        aria-label={t`Position`}
+        min={0}
+        max={durationMs}
+        step={1_000}
+        value={[shownMs]}
+        onValueChange={([v]) => setSeeking(v)}
+        onValueCommit={([v]) => {
+          setSeeking(null);
+          onSeek(v);
+        }}
+      />
+      <div className="flex justify-between text-xs tabular-nums text-[--muted]">
+        <span>{clock(shownMs)}</span>
+        <span>{clock(durationMs)}</span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The track a picker shows: the one just picked, until the device reports that
+ * it took it. A device reports its tracks every ten seconds and the remote
+ * reads them more often than that, so without this a pick jumps back to the
+ * track before it, and again once the report catches up.
+ */
+function usePicked(reported: number | undefined, itemId: string | undefined) {
+  const [picked, setPicked] = React.useState<number | null>(null);
+  React.useEffect(() => setPicked(null), [itemId]);
+  React.useEffect(() => {
+    if (picked === null) return;
+    if (picked === reported) {
+      setPicked(null);
+      return;
+    }
+    // Nothing came of it: show what the device says again.
+    const timer = setTimeout(() => setPicked(null), HELD_MS);
+    return () => clearTimeout(timer);
+  }, [picked, reported]);
+  return [picked ?? reported, setPicked] as const;
+}
+
 function Remote({
   session,
   starting,
@@ -240,18 +299,26 @@ function Remote({
   const item = session.NowPlayingItem;
   const id = session.Id!;
   const durationMs = ticksToMs(item?.RunTimeTicks);
-  const position = usePosition(session, durationMs);
-  const [seeking, setSeeking] = React.useState<number | null>(null);
   const paused = !!session.PlayState?.IsPaused;
+  const [audioAt, pickAudio] = usePicked(
+    session.PlayState?.AudioStreamIndex ?? undefined,
+    item?.Id
+  );
+  const [subtitleAt, pickSubtitle] = usePicked(
+    session.PlayState?.SubtitleStreamIndex ?? undefined,
+    item?.Id
+  );
   const commands = session.SupportedCommands ?? [];
   const send = (command: RemotePlaystate, seekMs?: number) =>
     void control
       .playstate(id, command, seekMs)
       .catch(() => toast.error(t`The other device could not be reached`));
-  const setTrack = (kind: TrackKind, index: string) =>
+  const setTrack = (kind: TrackKind, index: string) => {
+    (kind === 'audio' ? pickAudio : pickSubtitle)(Number(index));
     void control
       .track(id, kind, Number(index))
       .catch(() => toast.error(t`The other device could not be reached`));
+  };
 
   if (!item)
     return (
@@ -279,7 +346,6 @@ function Remote({
   const art =
     landscapeUrl(client, item, { maxWidth: 640 }) ??
     posterUrl(client, item, { maxWidth: 320 });
-  const shownMs = seeking ?? position;
   return (
     <div data-ui="remote" className="space-y-5 py-2">
       <button
@@ -310,24 +376,11 @@ function Remote({
       {session.SupportsMediaControl && (
         <>
           {durationMs > 0 && (
-            <div className="space-y-1">
-              <Slider
-                aria-label={t`Position`}
-                min={0}
-                max={durationMs}
-                step={1_000}
-                value={[shownMs]}
-                onValueChange={([v]) => setSeeking(v)}
-                onValueCommit={([v]) => {
-                  setSeeking(null);
-                  send('Seek', v);
-                }}
-              />
-              <div className="flex justify-between text-xs tabular-nums text-[--muted]">
-                <span>{clock(shownMs)}</span>
-                <span>{clock(durationMs)}</span>
-              </div>
-            </div>
+            <Position
+              session={session}
+              durationMs={durationMs}
+              onSeek={(ms) => send('Seek', ms)}
+            />
           )}
           <div className="flex items-center justify-center gap-2">
             <IconButton
@@ -384,7 +437,7 @@ function Remote({
             value: String(s.Index),
             label: trackLabel(s, i + 1),
           }))}
-          value={String(session.PlayState?.AudioStreamIndex ?? '')}
+          value={String(audioAt ?? '')}
           onValueChange={(v) => setTrack('audio', v)}
         />
       )}
@@ -398,7 +451,7 @@ function Remote({
               label: trackLabel(s, i + 1),
             })),
           ]}
-          value={String(session.PlayState?.SubtitleStreamIndex ?? '')}
+          value={String(subtitleAt ?? '')}
           onValueChange={(v) => setTrack('subtitle', v)}
         />
       )}
