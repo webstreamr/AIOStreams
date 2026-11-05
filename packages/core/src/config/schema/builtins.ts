@@ -3,6 +3,7 @@ import {
   boolOrList,
   byteSize,
   commaSeparatedList,
+  commaSeparatedUrlList,
   optionalPositiveInt,
   positiveInt,
   seconds,
@@ -1001,10 +1002,21 @@ export const builtinsSchema = {
   torrentGalaxy: {
     url: {
       schema: urlString,
+      // Jackett: https://github.com/Jackett/Jackett/blob/master/src/Jackett.Common/Definitions/torrentgalaxyclone.yml
       default: 'https://torrentgalaxy.online',
       label: 'Torrent Galaxy URL',
       env: 'BUILTIN_TORRENT_GALAXY_URL',
       description: 'Base URL for the Torrent Galaxy built-in addon.',
+      requiresRestart: false,
+      secret: false,
+    },
+    mirrors: {
+      schema: commaSeparatedUrlList,
+      default: ['https://torrentgalaxy.info'] as string[],
+      label: 'Torrent Galaxy mirrors',
+      env: 'BUILTIN_TORRENT_GALAXY_MIRRORS',
+      description:
+        'Comma-separated alternative URLs for the Torrent Galaxy built-in addon, tried in order when the main URL fails.',
       requiresRestart: false,
       secret: false,
     },
@@ -1049,10 +1061,26 @@ export const builtinsSchema = {
   eztv: {
     url: {
       schema: urlString,
+      // Jackett: https://github.com/Jackett/Jackett/blob/master/src/Jackett.Common/Definitions/eztv.yml
       default: 'https://eztvx.to',
       label: 'EZTV URL',
       env: 'BUILTIN_EZTV_URL',
       description: 'Base URL for the EZTV built-in addon.',
+      requiresRestart: false,
+      secret: false,
+    },
+    mirrors: {
+      schema: commaSeparatedUrlList,
+      default: [
+        'https://eztv.wf',
+        'https://eztv.tf',
+        'https://eztv.yt',
+        'https://eztv1.xyz',
+      ] as string[],
+      label: 'EZTV mirrors',
+      env: 'BUILTIN_EZTV_MIRRORS',
+      description:
+        'Comma-separated alternative URLs for the EZTV built-in addon, tried in order when the main URL fails.',
       requiresRestart: false,
       secret: false,
     },
@@ -1096,10 +1124,21 @@ export const builtinsSchema = {
   therarbg: {
     url: {
       schema: urlString,
+      // Jackett: https://github.com/Jackett/Jackett/blob/master/src/Jackett.Common/Definitions/therarbg.yml
       default: 'https://therarbg.to',
       label: 'TheRARBG URL',
       env: 'BUILTIN_THERARBG_URL',
       description: 'Base URL for the TheRARBG built-in addon.',
+      requiresRestart: false,
+      secret: false,
+    },
+    mirrors: {
+      schema: commaSeparatedUrlList,
+      default: ['https://therarbg.com'] as string[],
+      label: 'TheRARBG mirrors',
+      env: 'BUILTIN_THERARBG_MIRRORS',
+      description:
+        'Comma-separated alternative URLs for the TheRARBG built-in addon, tried in order when the main URL fails.',
       requiresRestart: false,
       secret: false,
     },

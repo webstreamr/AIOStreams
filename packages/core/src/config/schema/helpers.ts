@@ -537,6 +537,12 @@ export const commaSeparatedList = z.union([
   z.string().transform(splitList),
 ]);
 
+/** Comma-separated (env) or array (DB) list of URLs, trailing slashes stripped. */
+export const commaSeparatedUrlList = z.union([
+  z.array(urlString),
+  z.string().transform(splitList).pipe(z.array(urlString)),
+]);
+
 export function commaSeparatedEnumList<
   const T extends readonly [string, ...string[]],
 >(values: T) {
