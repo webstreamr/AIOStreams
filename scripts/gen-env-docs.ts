@@ -67,6 +67,7 @@ const GROUP_ORDER = ['Core', 'Network', 'Content', 'Limits', 'Other'];
 const ACRONYMS: Record<string, string> = {
   api: 'API',
   url: 'URL',
+  urls: 'URLs',
   uri: 'URI',
   id: 'ID',
   ip: 'IP',
@@ -86,6 +87,7 @@ const ACRONYMS: Record<string, string> = {
   ttl: 'TTL',
   nab: 'NAB',
   db: 'DB',
+  m3u: 'M3U',
 };
 
 function humanise(s: string): string {

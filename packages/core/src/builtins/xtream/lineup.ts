@@ -6,7 +6,7 @@ import type {
   XtreamClient,
   XtreamStream,
 } from './api.js';
-import { TieredStore, deltas, sums } from './store.js';
+import { TieredStore, deltas, searchWords, sums } from '../livetv/index.js';
 
 const logger = createLogger('xtream');
 
@@ -55,7 +55,7 @@ export function searchLineup(
   term: string,
   limit: number
 ): number[] {
-  const words = term.toLowerCase().split(/\s+/).filter(Boolean);
+  const words = searchWords(term);
   const found: number[] = [];
   if (!words.length) return found;
   const count = channelCount(lineup);
@@ -173,6 +173,7 @@ const lineups = new TieredStore<Lineup, Stored>('xtream-lineup', {
       timeZone: s.timeZone,
     };
   },
+  staleTtl: STALE_SECONDS,
 });
 
 /** The group names alone, which a manifest lists without the channels. */
@@ -181,6 +182,7 @@ const groupLists = new TieredStore<string[], string[]>('xtream-groups', {
   sizeOf: stringBytes,
   encode: (groups) => groups,
   decode: (groups) => groups,
+  staleTtl: STALE_SECONDS,
 });
 
 const catchups = new TieredStore<number, number>('xtream-catchup', {
@@ -407,8 +409,7 @@ export function lineupOf(client: XtreamClient): Promise<Lineup> {
           if (old)
             await lineups.setLocal(key, old[0], RETRY_SECONDS + STALE_SECONDS);
         }
-      ),
-    STALE_SECONDS
+      )
   );
 }
 
@@ -436,8 +437,7 @@ export async function groupsOf(client: XtreamClient): Promise<string[]> {
     () =>
       groupLists
         .load(key, fetch, appConfig.builtins.xtream.timeout)
-        .then(() => undefined),
-    STALE_SECONDS
+        .then(() => undefined)
   );
 }
 

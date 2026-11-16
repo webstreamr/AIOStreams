@@ -73,6 +73,7 @@ export {
   SeaDexDataset,
   LibraryAddon,
   XtreamAddon,
+  M3uAddon,
   preWarmLibraryCaches,
   refreshLibraryCacheForService,
   testNabEndpoint,
