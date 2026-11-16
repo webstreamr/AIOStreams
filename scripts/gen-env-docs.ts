@@ -67,6 +67,7 @@ const GROUP_ORDER = ['Core', 'Network', 'Content', 'Limits', 'Other'];
 const ACRONYMS: Record<string, string> = {
   api: 'API',
   url: 'URL',
+  urls: 'URLs',
   uri: 'URI',
   id: 'ID',
   ip: 'IP',
